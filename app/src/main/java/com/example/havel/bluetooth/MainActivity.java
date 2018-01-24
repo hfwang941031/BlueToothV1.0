@@ -22,6 +22,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,6 +57,13 @@ public class MainActivity extends AppCompatActivity {
     private Set<BluetoothDevice> bondDevices;
     private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private final String NAME = "my bluetooth";
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(MainActivity.this);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,15 +98,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(searchReceiver);
+        EventBus.getDefault().unregister(MainActivity.this);
+    }
+    @Subscribe(threadMode =ThreadMode.MAIN)
+    public void onMessageEvent(EventText eventtext)
+    {
+        Toast.makeText(this,eventtext.getEventText(), Toast.LENGTH_SHORT).show();
     }
 
-    private Handler handler=new Handler(){
+   /* private Handler handler=new Handler(){
         public void handleMessage(Message msg)
         {
             super.handleMessage(msg);
             Toast.makeText(MainActivity.this,String.valueOf(msg.obj),Toast.LENGTH_LONG).show();
         }
-    };
+    };*/
     private class AcceptThread extends Thread{
         private BluetoothServerSocket severSocket;
         private InputStream is;
@@ -124,9 +141,11 @@ public class MainActivity extends AppCompatActivity {
                     {
                         byte[] buffer = new byte[128];
                         int count=is.read(buffer);
-                        Message msg=new Message();
-                        msg.obj = new String(buffer, 0, count, "utf-8");
-                        handler.sendMessage(msg);
+                        EventText eventext = new EventText(new String(buffer,0,count,"utf-8"));
+                        EventBus.getDefault().post(eventext);
+                        //Message msg=new Message();
+                        //msg.obj = new String(buffer, 0, count, "utf-8");
+                        //handler.sendMessage(msg);
                     }
                     catch (IOException e)
                     {
