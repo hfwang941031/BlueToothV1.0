@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BlueTooth</string>
+    <string name="btnSearch">查找设备</string>
+    <string name="btnExit">退出应用</string>
+    <string name="tbtnSwitch">开/关蓝牙设备</string>
+
+</resources>
